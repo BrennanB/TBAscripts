@@ -16,18 +16,29 @@ tba = tbapy.TBA(os.getenv("TBAKEY"))
 
 teams_data = {}
 
+district_rename = {
+    "tx": "fit",
+    "mar": "fma",
+    "in": "fin",
+    "nc": "fnc"
+}
 
-
-for year in years:
+for year in tqdm(years):
     districts = tba.districts(year)
     for district in districts:
         rankings = tba.district_rankings(f"{year}{district['abbreviation']}")
-        print(f"{year}{district['abbreviation']}")
-        for team in tqdm(rankings):
+        # print(f"{year}{district['abbreviation']}")
+        for team in rankings:
             team_number = team["team_key"][3:]
-            team_district_key = f"{team_number}_{district['abbreviation']}"
+            district_upper = district['abbreviation'].upper()
+
+            # Check if the abbreviation needs renaming
+            if district_upper.lower() in district_rename:
+                district_upper = district_rename[district_upper.lower()].upper()
+
+            team_district_key = f"{team_number}_{district_upper}"
             if team_district_key not in teams_data:
-                teams_data[team_district_key] = {"team": team_number, "district": district['abbreviation'].upper()}
+                teams_data[team_district_key] = {"team": team_number, "district": district_upper}
             teams_data[team_district_key][year] = team["point_total"]
 
 # Write to CSV
