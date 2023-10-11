@@ -9,6 +9,22 @@ load_dotenv()
 tba = tbapy.TBA(os.getenv("TBAKEY"))
 API_KEY_YOUTUBE = os.getenv("YT_API_KEY")
 
+def get_channel_id_from_custom_url(api_key, custom_url):
+    base_url = "https://www.googleapis.com/youtube/v3/channels"
+    params = {
+        "part": "id",
+        "forCustomUrl": custom_url,
+        "key": api_key
+    }
+    
+    response = requests.get(base_url, params=params)
+    data = response.json()
+    
+    if "items" in data and len(data["items"]) > 0:
+        return data["items"][0]["id"]
+    return None
+
+
 def get_channel_id_from_username(api_key, username):
     base_url = "https://www.googleapis.com/youtube/v3/channels"
     params = {
@@ -19,6 +35,7 @@ def get_channel_id_from_username(api_key, username):
     
     response = requests.get(base_url, params=params)
     data = response.json()
+    print(data)
     
     if "items" in data and len(data["items"]) > 0:
         return data["items"][0]["id"]
@@ -75,3 +92,4 @@ for team in tqdm(teams):
                         writer = csv.writer(csv_file)
                         writer.writerow([team.team_number, result['title'], result['publishedAt'], result['subscriberCount'], result['viewCount'], result['videoCount']])
 
+# print("Done")
