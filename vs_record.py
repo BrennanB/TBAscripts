@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-TEAM = 1727
+TEAM = 3543
 load_dotenv()
 tba = tbapy.TBA(os.getenv("TBAKEY"))
 
@@ -85,8 +85,8 @@ df['Delta Against'] = df['Wins Against'] - df['Losses Against']
 # Save to CSV
 df.to_csv('team_records.csv', index_label='Team')
 
-plot_dataframe(df.sort_values(by='Total Matches With', ascending=False).head(25), "Top 25 Teams by Total Matches With", "vs_record_summary.png")
-plot_dataframe(df.sort_values(by='Delta Against', ascending=False).head(25), "Top 25 Teams by Delta Against", "top_25_delta_against.png")
-plot_dataframe(df.sort_values(by='Delta Against').head(25), "Bottom 25 Teams by Delta Against", "bottom_25_delta_against.png")
+plot_dataframe(df.sort_values(by='Total Matches With', ascending=False).head(25), f"Top 25 Teams by Total Matches With ({TEAM})", "vs_record_summary.png")
+plot_dataframe(df.sort_values(by='Delta Against', ascending=False).head(25), f"Top 25 Teams by Delta Against ({TEAM})", "top_25_delta_against.png")
+plot_dataframe(df.sort_values(by='Delta Against').head(25), f"Bottom 25 Teams by Delta Against ({TEAM})", "bottom_25_delta_against.png")
 
 print("Done")
