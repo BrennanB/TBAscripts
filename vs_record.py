@@ -9,7 +9,7 @@ from tqdm import tqdm
 from shutil import rmtree
 import PIL
 
-TEAM = 1114
+TEAM = 3161
 load_dotenv()
 tba = tbapy.TBA(os.getenv("TBAKEY"))
 
@@ -126,39 +126,46 @@ def create_infographic(team_name, team_number, colors, lifetime_wins, lifetime_l
         print(f"Failed to load font: {e}")
         return
 
-    img = Image.new('RGB', (800, 600), color=colors[0])
+    img = Image.new('RGB', (800, 600), color=colors[0])  # Use primary color as the background
     d = ImageDraw.Draw(img)
 
     # Draw border
-    border_color = colors[1]
+    border_color = colors[1]  # Use secondary color as the border color
     border_width = 7
     img_with_border = Image.new('RGB', (img.width + 2 * border_width, img.height + 2 * border_width), color=border_color)
     img_with_border.paste(img, (border_width, border_width))
 
     d = ImageDraw.Draw(img_with_border)  # Use ImageDraw on the bordered image
 
-    # Draw team number and name
+    # Draw team number and name with inverted background
     team_text = f"Team {team_number} - {team_name}"
     team_width, team_height = font_team.getsize(team_text)
     team_position = ((img.width - team_width) / 8 + border_width, 10 + border_width)
-    d.text(team_position, team_text, font=font_team, fill=colors[1])
+    team_bg_rect = [team_position[0] - 10, team_position[1] - 10, team_position[0] + team_width + 10, team_position[1] + team_height + 10]
+    d.rectangle(team_bg_rect, fill=colors[1])  # Use secondary color for background behind team number and name
+    d.text(team_position, team_text, font=font_team, fill=colors[0])  # Use primary color for text
 
     # Draw lifetime wins and losses with smaller font
     lifetime_text = f"Lifetime Record: {lifetime_wins} - {lifetime_losses}"
     lifetime_width, lifetime_height = font_lifetime.getsize(lifetime_text)
     lifetime_position = ((img.width - lifetime_width) / 8 + border_width, team_height + 30 + border_width)
-    d.text(lifetime_position, lifetime_text, font=font_lifetime, fill=colors[1])
+    d.text(lifetime_position, lifetime_text, font=font_lifetime, fill=colors[1])  # Use secondary color for text
 
     # Draw top teams information
-    top_teams_text = "Top 5 Total Matches With:\n"
+    top_teams_text = "Shared the field with:\n"
     for i, (team, matches) in enumerate(top_teams.items(), start=1):
-        top_teams_text += f"{i}. {team}: {matches}\n"
+        top_teams_text += f"{i}. {team}: {matches} times\n"
 
     top_teams_width, top_teams_height = font_top_teams.getsize(top_teams_text)
     top_teams_position = (lifetime_position[0], lifetime_position[1] + lifetime_height + 30)
-    d.text(top_teams_position, top_teams_text, font=font_top_teams, fill=colors[1])
+    d.text(top_teams_position, top_teams_text, font=font_top_teams, fill=colors[1])  # Use secondary color for text
 
     img_with_border.save(os.path.join('vs records', 'summary_infographic.png'))
+
+
+
+
+
 
 
 def main():
