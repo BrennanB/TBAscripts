@@ -9,7 +9,7 @@ from tqdm import tqdm
 from shutil import rmtree
 import PIL
 
-TEAM = 47
+TEAM = 1114
 load_dotenv()
 tba = tbapy.TBA(os.getenv("TBAKEY"))
 
@@ -108,10 +108,11 @@ def plot_dataframe(df, title, filename):
     plt.title(title)
     plt.savefig(os.path.join('vs records', filename))
 
-def create_infographic(team_name, team_number, colors, lifetime_wins, lifetime_losses):
+def create_infographic(team_name, team_number, colors, lifetime_wins, lifetime_losses, top_teams):
     font_path = 'C:\\Windows\\Fonts\\GOTHICB.ttf'  # Path to your font file
     font_size_team = 50  # Font size for the team name
     font_size_lifetime = 30  # Font size for the lifetime wins
+    font_size_top_teams = 20  # Font size for the top teams information
 
     if not os.path.exists(font_path):
         print("Font file does not exist. Please check the path.")
@@ -120,46 +121,44 @@ def create_infographic(team_name, team_number, colors, lifetime_wins, lifetime_l
     try:
         font_team = ImageFont.truetype(font_path, font_size_team)
         font_lifetime = ImageFont.truetype(font_path, font_size_lifetime)
+        font_top_teams = ImageFont.truetype(font_path, font_size_top_teams)
     except IOError as e:
         print(f"Failed to load font: {e}")
         return
 
-    # Create blank image with secondary color only where team name and number will be
-    background_color = colors[0]  # Use primary color for the main background
-    text_background_color = colors[1]  # Use secondary color for the text background
-    img_background = Image.new('RGB', (800, 600), color=background_color)
-    d_background = ImageDraw.Draw(img_background)
+    img = Image.new('RGB', (800, 600), color=colors[0])
+    d = ImageDraw.Draw(img)
 
-    # Draw team number and name with secondary color on the blank image
-    team_text = f"Team {team_number} - {team_name}"
-    team_width, team_height = d_background.textsize(team_text, font=font_team)
-    team_position = ((img_background.width - team_width) / 8, 10)
-    d_background.rectangle([team_position[0], team_position[1], team_position[0] + team_width, team_position[1] + team_height], fill=text_background_color)
-    d_background.text(team_position, team_text, font=font_team, fill=colors[0])  # Use primary color for text
-
-    # Composite the background with the main image
-    img_with_text = Image.alpha_composite(img_background.convert("RGBA"), img_background.convert("RGBA"))
-
- 
-    # Draw lifetime wins and losses with smaller font on the main image
-    d = ImageDraw.Draw(img_with_text)
-    lifetime_text = f"Lifetime Record: {lifetime_wins} - {lifetime_losses}"
-    lifetime_width, lifetime_height = d.textsize(lifetime_text, font=font_lifetime)
-    lifetime_position = ((img_with_text.width - lifetime_width) / 2, team_height + 100)  # Adjusted position
-    print("Lifetime text:", lifetime_text)
-    print("Lifetime position:", lifetime_position)
-    d.text(lifetime_position, lifetime_text, font=font_lifetime, fill=colors[1])  # Use secondary color for text
-
-
-
-    # Add border
+    # Draw border
     border_color = colors[1]
     border_width = 7
-    img_with_border = Image.new('RGB', (img_with_text.width + 2 * border_width, img_with_text.height + 2 * border_width), color=border_color)
-    img_with_border.paste(img_with_text, (border_width, border_width))
+    img_with_border = Image.new('RGB', (img.width + 2 * border_width, img.height + 2 * border_width), color=border_color)
+    img_with_border.paste(img, (border_width, border_width))
+
+    d = ImageDraw.Draw(img_with_border)  # Use ImageDraw on the bordered image
+
+    # Draw team number and name
+    team_text = f"Team {team_number} - {team_name}"
+    team_width, team_height = font_team.getsize(team_text)
+    team_position = ((img.width - team_width) / 8 + border_width, 10 + border_width)
+    d.text(team_position, team_text, font=font_team, fill=colors[1])
+
+    # Draw lifetime wins and losses with smaller font
+    lifetime_text = f"Lifetime Record: {lifetime_wins} - {lifetime_losses}"
+    lifetime_width, lifetime_height = font_lifetime.getsize(lifetime_text)
+    lifetime_position = ((img.width - lifetime_width) / 8 + border_width, team_height + 30 + border_width)
+    d.text(lifetime_position, lifetime_text, font=font_lifetime, fill=colors[1])
+
+    # Draw top teams information
+    top_teams_text = "Top 5 Total Matches With:\n"
+    for i, (team, matches) in enumerate(top_teams.items(), start=1):
+        top_teams_text += f"{i}. {team}: {matches}\n"
+
+    top_teams_width, top_teams_height = font_top_teams.getsize(top_teams_text)
+    top_teams_position = (lifetime_position[0], lifetime_position[1] + lifetime_height + 30)
+    d.text(top_teams_position, top_teams_text, font=font_top_teams, fill=colors[1])
 
     img_with_border.save(os.path.join('vs records', 'summary_infographic.png'))
-
 
 
 def main():
@@ -167,10 +166,12 @@ def main():
     team_name, team_colors = fetch_team_data(f'frc{TEAM}')
     all_time_records = process_matches(tba.team_years(TEAM))
     df_all = pd.DataFrame.from_dict(all_time_records, orient='index')
+    top_teams = df_all['Total Matches With'].nlargest(5).to_dict()
+    print("Top 5 Teams:", top_teams)  # Add this line to check top_teams
     lifetime_wins = df_all['Wins With'].sum()
     lifetime_losses = df_all['Losses With'].sum()
+    create_infographic(team_name, TEAM, team_colors, lifetime_wins, lifetime_losses, top_teams)
     plot_dataframes(df_all)
-    create_infographic(team_name, TEAM, team_colors, lifetime_wins, lifetime_losses)
     print(f"Done processing for Team {team_name} with colors {team_colors}")
 
 if __name__ == "__main__":
