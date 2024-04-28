@@ -5,7 +5,6 @@ from tqdm import tqdm
 
 
 load_dotenv()
-tba = tbapy.TBA(os.getenv("TBAKEY"))
 
 events = tba.district_events("2024ont")
 for event in events:
