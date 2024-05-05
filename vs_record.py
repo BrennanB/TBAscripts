@@ -9,7 +9,7 @@ from tqdm import tqdm
 from shutil import rmtree
 import PIL
 
-TEAM = 3161
+TEAM = 7902
 load_dotenv()
 tba = tbapy.TBA(os.getenv("TBAKEY"))
 
